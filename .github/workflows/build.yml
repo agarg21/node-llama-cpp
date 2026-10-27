@@ -260,6 +260,12 @@ jobs:
           cmake --version
           uname -mprs
 
+      - name: Limit CUDA architectures on pull requests
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        # PR builds only compile-check the CUDA variants; master/beta builds keep the full architecture list
+        run: echo "NODE_LLAMA_CPP_CMAKE_OPTION_CMAKE_CUDA_ARCHITECTURES=86-real" >> "$GITHUB_ENV"
+
       - name: Setup & Build
         id: build
         shell: bash
@@ -318,7 +324,7 @@ jobs:
           async function buildBinary(arch, flags = [], nodeTarget = nodeVersion) {
             console.log(`Building ${arch} for node ${nodeTarget} with flags`, flags);
 
-            await $`node ./dist/cli/cli.js source build --ciMode --noUsageExample --arch ${arch} --nodeTarget ${nodeTarget} ${flags}`;
+            await $`node ./dist/cli/cli.js source build --ciMode --noUsageExample --noCustomCmakeBuildOptionsInBinaryFolderName --arch ${arch} --nodeTarget ${nodeTarget} ${flags}`;
           }
 
           // build binaries
